@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     std::string midiFilename, musicFilename;
     float BPM;
     unsigned int SCREEN_X = 800, SCREEN_Y = 600;
+    int maxThreads = 200;
     bool setMidi, setSound, setBPM, doSave = false;
     std::string arg;
     srand(time(NULL));
@@ -86,6 +87,9 @@ int main(int argc, char** argv) {
         }
         else if (arg == "--export" || arg == "--save") {
             doSave = true;
+        }
+        else if (arg == "--threads") {
+            maxThreads = std::stoi(argv[++i]);
         }
     }
     std::cout << "Recieved arguments: \nMIDI - " << midiFilename << "\nSound - " << musicFilename << "\nBPM - " << BPM << "\n";
@@ -181,6 +185,8 @@ int main(int argc, char** argv) {
         dirName = "exported" + std::to_string(rand() % 1000);
         std::filesystem::create_directory("./" + dirName);
     }
+
+    std::atomic<int> activeThreads = 0;
     while (window.isOpen()){
         frameCount++;
         window.clear();
@@ -286,9 +292,15 @@ int main(int argc, char** argv) {
             texture.update(window);
             sf::Image screenshot = texture.copyToImage();
             std::string filepath = "./" + dirName + "/" + std::to_string(frameCount) + ".png";
-            std::thread([screenshot = std::move(screenshot), filepath]() {
+            while (activeThreads >= maxThreads) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            activeThreads++;
+            std::thread([screenshot = std::move(screenshot), filepath, &activeThreads]() {
                 screenshot.saveToFile(filepath);
+                activeThreads--;
             }).detach();
+
 
 
         }
