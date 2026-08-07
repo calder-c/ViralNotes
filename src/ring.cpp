@@ -10,7 +10,7 @@
 
 #include "midi.h"
 #include "disc.h"
-
+#include "guimode.h"
 
 sf::Color getRainbowColor(float hue) {
     // Wrap hue around if it exceeds 360
@@ -56,11 +56,9 @@ std::vector<sf::Vector2f> getCirclePoints(double radius, int numberOfPoints, flo
 }
 
 int main(int argc, char** argv) {
-    std::string midiFilename, musicFilename;
-    float BPM;
-    unsigned int SCREEN_X = 800, SCREEN_Y = 600;
-    int maxThreads = 200;
-    bool setMidi, setSound, setBPM, doSave = false;
+    bool setMidi, setSound, setBPM;
+    VisualizerSettings settings;
+    bool guiMode = false;
     std::string arg;
     srand(time(NULL));
     if (argc == 1) {
@@ -70,61 +68,61 @@ int main(int argc, char** argv) {
     for (int i = 0; i < argc; ++i) {
         arg = argv[i];
         if (arg == "--midi" || arg == "-mid" || arg == "-m") {
-            midiFilename = argv[++i];
+            settings.midiFilename = argv[++i];
             setMidi = true;
         }
         else if (arg == "--sound" || arg == "-s") {
-            musicFilename = argv[++i];
+            settings.musicFilename = argv[++i];
             setSound = true;
         }
         else if (arg == "--BPM" || arg == "--tempo") {
-            BPM = std::stof(argv[++i]);
+            settings.BPM = std::stof(argv[++i]);
             setBPM = true;
         }
         else if (arg == "--size") {
-            SCREEN_X = std::stoi(argv[++i]);
-            SCREEN_Y = std::stoi(argv[++i]);
+            settings.SCREEN_X = std::stoi(argv[++i]);
+            settings.SCREEN_Y = std::stoi(argv[++i]);
         }
         else if (arg == "--export" || arg == "--save") {
-            doSave = true;
+            settings.doSave = true;
         }
         else if (arg == "--threads") {
-            maxThreads = std::stoi(argv[++i]);
+            settings.maxThreads = std::stoi(argv[++i]);
+        }
+        else if (arg == "--gui") {
+            guiMode = true;
         }
     }
-    std::cout << "Recieved arguments: \nMIDI - " << midiFilename << "\nSound - " << musicFilename << "\nBPM - " << BPM << "\n";
+    std::cout << "Recieved arguments: \nMIDI - " << settings.midiFilename << "\nSound - " << settings.musicFilename << "\nBPM - " << settings.BPM << "\n";
     if (setMidi && setSound && setBPM) {
         std::cout << "Correctly caught args... initializing window\n";
-    } else {
+    } else if (guiMode == false) {
         throw std::invalid_argument("Caught bad args, terminating.");
     }
-    musicFilename = std::filesystem::canonical(musicFilename);
-    midiFilename = std::filesystem::canonical(midiFilename);
+    settings.musicFilename = std::filesystem::canonical(settings.musicFilename);
+    settings.midiFilename = std::filesystem::canonical(settings.midiFilename);
 
     // std::ifstream file(midiFilename, std::ios::binary);
     //
     // std::cout << std::boolalpha
     //           << "Open: " << file.is_open() << '\n';
+    if (guiMode) {
+        doImguiLoop(sf::Vector2u{1200, 800}, settings);
+    }
     sf::ContextSettings windowSettings;
     windowSettings.antiAliasingLevel = 8;
-    sf::RenderWindow window{sf::VideoMode({SCREEN_X, SCREEN_Y}), "Ring Visualiser", sf::Style::Default, sf::State::Windowed, windowSettings};
+    sf::RenderWindow window{sf::VideoMode({settings.SCREEN_X, settings.SCREEN_Y}), "Ring Visualiser", sf::Style::Default, sf::State::Windowed, windowSettings};
     window.setFramerateLimit(0);
     window.setVerticalSyncEnabled(false);
-    MidiData midiData(midiFilename, BPM);
-    sf::SoundBuffer musicBuf(musicFilename);
+    MidiData midiData(settings.midiFilename, settings.BPM);
+    sf::SoundBuffer musicBuf(settings.musicFilename);
     sf::Sound music(musicBuf);
     sf::Clock dtClock, elapsedTimeClock;
     sf::Font globalFont("../font/cour.ttf");
-
     float elapsedTime = 0;
-    float preDelay = 2;
-    float playOffset = 4;
-
-    float circleCenterX = SCREEN_X/2.0f,
-    circleCenterY = SCREEN_Y/2.0f,
-    circleRadius = 200.0f,
-    outlineThickness = 2,
-    currentOutlineThickness = 2;
+    float circleCenterX = settings.SCREEN_X/2.0f,
+    circleCenterY = settings.SCREEN_Y/2.0f,
+    currentOutlineThickness = settings.outlineThickness;
     bool musicPlaying = false;
     std::vector<Disc*> discList;
     std::vector<int> noteNumbers;
@@ -134,10 +132,10 @@ int main(int argc, char** argv) {
     std::map<int, sf::Color> noteToColor;
     std::vector<sf::Vector2f> circlePoints;
     sf::CircleShape circle;
-    circle.setPointCount(1200);
+    circle.setPointCount(settings.circlePointCount);
     for (auto & note : midiData.notes) {
-        note->absNoteOnTime += playOffset;
-        note->absNoteOffTime += playOffset;
+        note->absNoteOnTime += settings.playOffset;
+        note->absNoteOffTime += settings.playOffset;
         if(std::find(noteNumbers.begin(), noteNumbers.end(), note->noteNumber) != noteNumbers.end()) {
             //do nothing
         } else {
@@ -147,16 +145,16 @@ int main(int argc, char** argv) {
     int index = 0;
     std::sort(noteNumbers.begin(), noteNumbers.end());
     for (auto & noteNum : noteNumbers) {
-        noteToColor[noteNum] = getRainbowColor(index*30.0f);
+        noteToColor[noteNum] = getRainbowColor(index*settings.hueCyclingFactor +settings.hueOffset);
         index++;
 
     }
-    circlePoints = getCirclePoints(circleRadius, noteNumbers.size(), circleCenterX, circleCenterY);
+    circlePoints = getCirclePoints(settings.circleRadius, noteNumbers.size(), circleCenterX, circleCenterY);
     circle.setOutlineColor(sf::Color::White);
     circle.setFillColor(sf::Color::Black);
-    circle.setRadius(circleRadius);
-    circle.setOrigin(sf::Vector2f{circleRadius, circleRadius});
-    circle.setOutlineThickness(outlineThickness);
+    circle.setRadius(settings.circleRadius);
+    circle.setOrigin(sf::Vector2f{settings.circleRadius, settings.circleRadius});
+    circle.setOutlineThickness(settings.outlineThickness);
     circle.setPosition(sf::Vector2f{circleCenterX, circleCenterY});
     index = 0;
     for (auto noteNum : noteNumbers) {
@@ -181,22 +179,23 @@ int main(int argc, char** argv) {
     float exportFPS = 60.0f;
     float fixedDt = 1.0f / exportFPS;
     std::string dirName;
-    if (doSave) {
+    if (settings.doSave) {
         dirName = "exported" + std::to_string(rand() % 1000);
         std::filesystem::create_directory("./" + dirName);
     }
 
     std::atomic<int> activeThreads = 0;
+    float lastTimestamp = 0.0f;
     while (window.isOpen()){
         frameCount++;
         window.clear();
-        if (doSave) {
+        if (settings.doSave) {
             elapsedTime += fixedDt;
         } else {
             elapsedTime = elapsedTimeClock.getElapsedTime().asSeconds();
         }
         float dt;
-        if (doSave) {
+        if (settings.doSave) {
             dt = fixedDt;
         } else {
             sf::Time dtTime = dtClock.restart();
@@ -210,14 +209,17 @@ int main(int argc, char** argv) {
                 window.close();
         }
         for (auto & note : midiData.notes) {
-            if (elapsedTime >= (note->absNoteOnTime - preDelay) && !note->passed) {
+            if (note->absNoteOffTime >= lastTimestamp) {
+                lastTimestamp = note->absNoteOffTime;
+            }
+            if (elapsedTime >= (note->absNoteOnTime - settings.preDelay) && !note->passed) {
                 note->passed = true;
-                discList.push_back(new Disc(sf::Vector2f{circleCenterX, circleCenterY}, noteToPos[note->noteNumber], preDelay, noteToColor[note->noteNumber], note->noteNumber));
+                discList.push_back(new Disc(sf::Vector2f{circleCenterX, circleCenterY}, noteToPos[note->noteNumber], settings.preDelay, noteToColor[note->noteNumber], note->noteNumber, settings.funcIn, settings.funcOut));
 
             }
         }
 
-        if (elapsedTime >= playOffset && !doSave) {
+        if (elapsedTime >= settings.playOffset && !settings.doSave) {
             if (!musicPlaying) {
                 std::cout << "Started playback\n";
                 music.play();
@@ -225,10 +227,11 @@ int main(int argc, char** argv) {
             }
 
         }
+
         circle.setOutlineThickness(currentOutlineThickness);
         window.draw(circle);
-        if (currentOutlineThickness <= outlineThickness) {
-            currentOutlineThickness = outlineThickness;
+        if (currentOutlineThickness <= settings.outlineThickness) {
+            currentOutlineThickness = settings.outlineThickness;
 
         } else {
             currentOutlineThickness -= 20*dt;
@@ -261,38 +264,44 @@ int main(int argc, char** argv) {
 
             window.draw(*text.first);
         }
+        int discsRendering = 0;
         for (auto & disc : discList) {
             int result = disc->update(dt);
-            disc->render(window);
-            if (result == 1) {
-                disc->setNewDestination(sf::Vector2f(circleCenterX, circleCenterY), preDelay);
-                disc->shape.setOutlineColor(disc->shape.getFillColor());
-                sf::Color mutedColor = disc->shape.getOutlineColor();
-                mutedColor.r /= 3;
-                mutedColor.g /= 3;
-                mutedColor.b /= 3;
-                disc->shape.setFillColor(mutedColor);
-                currentOutlineThickness = outlineThickness + 10;
-                circle.setOutlineColor(disc->shape.getOutlineColor());
-                for (auto & text : drawableTextList) {
-                    if (std::stoi(text.first->getString().toAnsiString()) == disc->noteNumber) {
-                        text.first->setStyle(sf::Text::Bold);
-                        text.second = 500.0f;
+            if (disc->doRender == true) {
+                discsRendering++;
+                disc->render(window);
+                if (result == 1) {
+                    disc->setNewDestination(sf::Vector2f(circleCenterX, circleCenterY), settings.preDelay);
+                    disc->shape.setOutlineColor(disc->shape.getFillColor());
+                    sf::Color mutedColor = disc->shape.getOutlineColor();
+                    mutedColor.r /= 3;
+                    mutedColor.g /= 3;
+                    mutedColor.b /= 3;
+                    disc->shape.setFillColor(mutedColor);
+                    currentOutlineThickness = settings.outlineThickness + 10;
+                    circle.setOutlineColor(disc->shape.getOutlineColor());
+                    for (auto & text : drawableTextList) {
+                        if (std::stoi(text.first->getString().toAnsiString()) == disc->noteNumber) {
+                            text.first->setStyle(sf::Text::Bold);
+                            text.second = 500.0f;
+                        }
                     }
+                } else if (result == 2) {
+                    disc->doRender = false;
                 }
-            } else if (result == 2) {
-                disc->doRender = false;
             }
+
         }
         window.display();
-        if (doSave) {
+
+        if (settings.doSave) {
             sf::Vector2u size = window.getSize();
             sf::Texture texture;
             texture.resize(sf::Vector2u{size.x, size.y});
             texture.update(window);
             sf::Image screenshot = texture.copyToImage();
             std::string filepath = "./" + dirName + "/" + std::to_string(frameCount) + ".png";
-            while (activeThreads >= maxThreads) {
+            while (activeThreads >= settings.maxThreads) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
             activeThreads++;
@@ -304,6 +313,12 @@ int main(int argc, char** argv) {
 
 
         }
+        if (elapsedTime >= lastTimestamp+settings.preDelay+1.0f) {
+            window.close();
+        }
     }
-    system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.png' -itsoffset " + std::to_string(playOffset) + " -i " + musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p output.mp4").c_str());
+    if (settings.doSave) {
+        system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.png' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
+    }
+
 }
