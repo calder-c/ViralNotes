@@ -99,8 +99,6 @@ int main(int argc, char** argv) {
     } else if (guiMode == false) {
         throw std::invalid_argument("Caught bad args, terminating.");
     }
-    settings.musicFilename = std::filesystem::canonical(settings.musicFilename);
-    settings.midiFilename = std::filesystem::canonical(settings.midiFilename);
 
     // std::ifstream file(midiFilename, std::ios::binary);
     //
@@ -205,9 +203,9 @@ int main(int argc, char** argv) {
         while (const std::optional event = window.pollEvent())
         {
             // "close requested" event: we close the window
-            if (event->is<sf::Event::Closed>())
+            if (event->is<sf::Event::Closed>()) {
                 window.close();
-            exit(1);
+            }
         }
         for (auto & note : midiData.notes) {
             if (note->absNoteOffTime >= lastTimestamp) {
@@ -301,7 +299,7 @@ int main(int argc, char** argv) {
             texture.resize(sf::Vector2u{size.x, size.y});
             texture.update(window);
             sf::Image screenshot = texture.copyToImage();
-            std::string filepath = "./" + dirName + "/" + std::to_string(frameCount) + ".png";
+            std::string filepath = "./" + dirName + "/" + std::to_string(frameCount) + ".bmp";
             while (activeThreads >= settings.maxThreads) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
@@ -319,7 +317,8 @@ int main(int argc, char** argv) {
         }
     }
     if (settings.doSave) {
-        system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.png' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
+        system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.bmp' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
+        system(("rm -rf ./" + dirName).c_str());
     }
 
 }
