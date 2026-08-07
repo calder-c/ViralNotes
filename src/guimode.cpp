@@ -25,12 +25,18 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
     ImGui::SFML::Init(window);
     sf::Clock deltaClock;
     while (window.isOpen()) {
-        while (const std::optional event = window.pollEvent())
-        {
+        while (const std::optional event = window.pollEvent()) {
             ImGui::SFML::ProcessEvent(window, *event);
             // "close requested" event: we close the window
-            if (event->is<sf::Event::Closed>())
+            if (event->is<sf::Event::Closed>()){
                 window.close();
+                exit(1);
+            }
+
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
+        {
+            window.close();
         }
 
         ImGui::SFML::Update(window, deltaClock.restart());
@@ -86,7 +92,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         ImGui::Text(("Music File:" + settings.musicFilename).c_str());
         if (ImGui::Button("Save to .json")) {
             const char* jsonFormats[1] = {"*.json"};
-            if (const char *fileChosen = tinyfd_saveFileDialog("Choose save path", "settings.json", 1, jsonFormats,"JSON Files"); fileChosen != nullptr) {
+            if (const char *fileChosen = tinyfd_saveFileDialog("Choose save path", "settings.json", 0, jsonFormats,"JSON Files"); fileChosen != nullptr) {
                 saveSettings(fileChosen, settings);
             }
         }
@@ -97,7 +103,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
                 settings = newSettings;
             }
         }
-        if (ImGui::Button("Start Playback")) {
+        if (ImGui::Button("Start Playback [ENTER]")) {
             window.close();
         }
 

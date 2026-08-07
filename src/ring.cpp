@@ -207,6 +207,7 @@ int main(int argc, char** argv) {
             // "close requested" event: we close the window
             if (event->is<sf::Event::Closed>())
                 window.close();
+            exit(1);
         }
         for (auto & note : midiData.notes) {
             if (note->absNoteOffTime >= lastTimestamp) {
