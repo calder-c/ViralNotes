@@ -2,5 +2,51 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/assert" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/atomic" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/charconv" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/chrono" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/cobalt" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/container" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/context" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/contract" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/coroutine" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/date_time" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/fiber" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/filesystem" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/graph" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/iostreams" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/json" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/locale" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/log" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/math" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/nowide" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/openmethod" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/optional" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/process" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/program_options" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/random" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/serialization" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/stacktrace" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/test" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/thread" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/timer" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/type_erasure" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/unordered" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/url" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/boost-src/libs/wave" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/flac-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/freetype-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/freetype-src/subprojects/dlg" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/harfbuzz-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/midifile-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/nlohmann-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/nlohmann_json-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/ogg-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/sfml-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/sheenbidi-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/tfd-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/vorbis-src" vcs="Git" />
   </component>
 </project>

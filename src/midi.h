@@ -3,7 +3,7 @@
 #include <math.h>
 #include "note.h"
 
-#include "../midifile/include/MidiFile.h"
+#include <MidiFile.h>
 using namespace smf;
 class MidiData {
 public:

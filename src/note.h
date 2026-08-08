@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../midifile/include/MidiFile.h"
+#include <MidiFile.h>
 using namespace smf;
 struct Note {
     //everything is in ticks!

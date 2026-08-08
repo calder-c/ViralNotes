@@ -1,28 +1,54 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.5)
 project(MusicVisLib LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Override minimum policy version")
 # SFML 3
+include(FetchContent)
+FetchContent_Declare(
+        boost
+        GIT_REPOSITORY https://github.com/boostorg/boost.git
+        GIT_TAG        25a8895fcdd04faa2afff3c124c41b54713be88d
+)
+FetchContent_Declare(
+        SFML
+        GIT_REPOSITORY https://github.com/SFML/SFML.git
+        GIT_TAG        8835b6b955c96fa1ad1278a8dae6f05c4143effc
+)
+FetchContent_Declare(
+        midifile
+        GIT_REPOSITORY https://github.com/craigsapp/midifile.git
+        GIT_TAG        master
+)
+FetchContent_Declare(
+        tfd
+        GIT_REPOSITORY https://github.com/native-toolkit/libtinyfiledialogs.git
+        GIT_TAG        master
+)
+FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG        55f93686c01528224f448c19128836e7df245f72
+)
+FetchContent_MakeAvailable(boost SFML midifile tfd nlohmann_json)
 
-find_package(SFML 3 REQUIRED COMPONENTS Graphics Audio Window System)
 find_package(OpenGL REQUIRED)
 
 # Midifile
 
-add_library(midifile STATIC
-    midifile/src/Binasc.cpp
-    midifile/src/MidiEvent.cpp
-    midifile/src/MidiEventList.cpp
-    midifile/src/MidiFile.cpp
-    midifile/src/MidiMessage.cpp
-    midifile/src/Options.cpp
-)
+#add_library(midifile STATIC
+#    midifile/src/Binasc.cpp
+#    midifile/src/MidiEvent.cpp
+#    midifile/src/MidiEventList.cpp
+#    midifile/src/MidiFile.cpp
+#    midifile/src/MidiMessage.cpp
+#    midifile/src/Options.cpp
+#)
 
-target_include_directories(midifile PUBLIC
-    midifile/include
-)
+#target_include_directories(midifile PUBLIC
+#    midifile/include
+#)
 
 # Main executable
 
@@ -42,13 +68,18 @@ target_sources(MusicVisLib PRIVATE
     imgui/imgui-SFML.cpp
 )
 
-add_library(tfd
-    tfd/tinyfiledialogs.c
+add_library(tfd STATIC
+        ${tfd_SOURCE_DIR}/tinyfiledialogs.c
 )
 
 target_include_directories(tfd PUBLIC
-    tfd
+        ${tfd_SOURCE_DIR}
 )
+
+target_include_directories(midifile PUBLIC
+        ${midifile_SOURCE_DIR}/include
+)
+
 
 if(TARGET OpenGL::OpenGL)
     set(OPENGL_TARGET OpenGL::OpenGL)
@@ -62,8 +93,10 @@ target_link_libraries(MusicVisLib PRIVATE
         SFML::Audio
         SFML::Window
         SFML::System
+        Boost::process
         midifile
         tfd
+        nlohmann_json::nlohmann_json
 )
 
 if (APPLE)

@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <complex>
 #include <thread>
-
+#include <boost/process.hpp>
 #include "midi.h"
 #include "disc.h"
 #include "guimode.h"

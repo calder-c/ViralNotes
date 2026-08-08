@@ -9,9 +9,9 @@
 #include <thread>
 #include "../imgui/imgui.h"
 #include "../imgui/imgui-SFML.h"
-#include "../tfd/tinyfiledialogs.h"
+#include <tinyfiledialogs.h>
 #include "easing.h"
-#include "../nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
 #ifndef MUSICVISLIB_GUIMODE_H
 #define MUSICVISLIB_GUIMODE_H
 
