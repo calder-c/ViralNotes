@@ -7,11 +7,9 @@
 #include <algorithm>
 #include <complex>
 #include <thread>
-#include <boost/process.hpp>
 #include "midi.h"
 #include "disc.h"
 #include "guimode.h"
-
 sf::Color getRainbowColor(float hue) {
     // Wrap hue around if it exceeds 360
     hue = std::fmod(hue, 360.0f);
@@ -108,7 +106,7 @@ int main(int argc, char** argv) {
         doImguiLoop(sf::Vector2u{1200, 800}, settings);
     }
     sf::ContextSettings windowSettings;
-    windowSettings.antiAliasingLevel = 8;
+    windowSettings.antiAliasingLevel = 0;
     sf::RenderWindow window{sf::VideoMode({settings.SCREEN_X, settings.SCREEN_Y}), "Ring Visualiser", sf::Style::Default, sf::State::Windowed, windowSettings};
     window.setFramerateLimit(0);
     window.setVerticalSyncEnabled(false);
@@ -177,16 +175,25 @@ int main(int argc, char** argv) {
     float exportFPS = 60.0f;
     float fixedDt = 1.0f / exportFPS;
     std::string dirName;
-    if (settings.doSave) {
-        dirName = "exported" + std::to_string(rand() % 1000);
-        std::filesystem::create_directory("./" + dirName);
-    }
+    // if (settings.doSave) {
+    //     dirName = "exported" + std::to_string(rand() % 1000);
+    //     std::filesystem::create_directory("./" + dirName);
+    // }
 
     std::atomic<int> activeThreads = 0;
     float lastTimestamp = 0.0f;
+    if (settings.doSave) {
+
+        //system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.bmp' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
+    }
+    sf::RenderTexture exportTarget({settings.SCREEN_X, settings.SCREEN_Y}, windowSettings);
+    sf::Vector2u exportSize = exportTarget.getSize();
+    window.setFramerateLimit(0);
+    window.setVerticalSyncEnabled(false);
     while (window.isOpen()){
         frameCount++;
         window.clear();
+        exportTarget.clear();
         if (settings.doSave) {
             elapsedTime += fixedDt;
         } else {
@@ -228,7 +235,11 @@ int main(int argc, char** argv) {
         }
 
         circle.setOutlineThickness(currentOutlineThickness);
-        window.draw(circle);
+        if (settings.doSave) {
+            exportTarget.draw(circle);
+        } else {
+            window.draw(circle);
+        }
         if (currentOutlineThickness <= settings.outlineThickness) {
             currentOutlineThickness = settings.outlineThickness;
 
@@ -260,15 +271,24 @@ int main(int argc, char** argv) {
 
                 text.first->setFillColor(flashedColor);
             }
+            if (settings.doSave) {
+                exportTarget.draw(*text.first);
+            } else {
+                window.draw(*text.first);
+            }
 
-            window.draw(*text.first);
         }
         int discsRendering = 0;
         for (auto & disc : discList) {
             int result = disc->update(dt);
             if (disc->doRender == true) {
                 discsRendering++;
-                disc->render(window);
+                if (settings.doSave) {
+                    exportTarget.draw(disc->shape);
+                } else {
+                    disc->render(window);
+                }
+
                 if (result == 1) {
                     disc->setNewDestination(sf::Vector2f(circleCenterX, circleCenterY), settings.preDelay);
                     disc->shape.setOutlineColor(disc->shape.getFillColor());
@@ -291,34 +311,47 @@ int main(int argc, char** argv) {
             }
 
         }
+        std::erase_if(discList, [](Disc* d) {
+            if (!d->doRender) { delete d; return true; }
+            return false;
+        });
+        if (settings.doSave) {
+            exportTarget.display();
+            sf::Image screenshot = exportTarget.getTexture().copyToImage();
+            const std::uint8_t *pixelsPtr = screenshot.getPixelsPtr();
+            size_t totalBytes = exportSize.x*exportSize.y*4;
+            asio::write(wp.value(), asio::buffer(screenshot.getPixelsPtr(), totalBytes));
+        }
+        // if (settings.doSave) {
+        //     sf::Clock c;
+        //     exportTarget.display();
+        //     float resolve = c.restart().asMicroseconds() / 1000.0f;
+        //
+        //     sf::Image screenshot = exportTarget.getTexture().copyToImage();
+        //     float readback = c.restart().asMicroseconds() / 1000.0f;
+        //
+        //     std::size_t totalBytes = std::size_t(exportSize.x) * exportSize.y * 4;
+        //     asio::write(*wp, asio::buffer(screenshot.getPixelsPtr(), totalBytes));
+        //     float pipeWrite = c.restart().asMicroseconds() / 1000.0f;
+        //
+        //     if (frameCount % 60 == 0) {
+        //         std::cout << "resolve " << resolve
+        //                   << "  readback " << readback
+        //                   << "  write " << pipeWrite
+        //                   << "  discs " << discsRendering << "\n";
+        //     }
+        // }
+        if (!settings.doSave) {
+            window.draw(sf::Sprite(exportTarget.getTexture()));
+        }
         window.display();
 
-        if (settings.doSave) {
-            sf::Vector2u size = window.getSize();
-            sf::Texture texture;
-            texture.resize(sf::Vector2u{size.x, size.y});
-            texture.update(window);
-            sf::Image screenshot = texture.copyToImage();
-            std::string filepath = "./" + dirName + "/" + std::to_string(frameCount) + ".bmp";
-            while (activeThreads >= settings.maxThreads) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-            activeThreads++;
-            std::thread([screenshot = std::move(screenshot), filepath, &activeThreads]() {
-                screenshot.saveToFile(filepath);
-                activeThreads--;
-            }).detach();
-
-
-
-        }
         if (elapsedTime >= lastTimestamp+settings.preDelay+1.0f) {
             window.close();
         }
     }
     if (settings.doSave) {
-        system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.bmp' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
-        system(("rm -rf ./" + dirName).c_str());
+        std::cout << "ffmpeg exited with " << ffmpegProc.value().exit_code() << "\n";
     }
 
 }
