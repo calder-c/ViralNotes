@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
     sf::SoundBuffer musicBuf(settings.musicFilename);
     sf::Sound music(musicBuf);
     sf::Clock dtClock, elapsedTimeClock;
-    sf::Font globalFont("../font/cour.ttf");
+    sf::Font globalFont("./font/cour.ttf");
     float elapsedTime = 0;
     float circleCenterX = settings.SCREEN_X/2.0f,
     circleCenterY = settings.SCREEN_Y/2.0f,
