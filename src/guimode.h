@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <complex>
 #include <thread>
-#include "../imgui/imgui.h"
-#include "../imgui/imgui-SFML.h"
+#include <imgui.h>
+#include <imgui-SFML.h>
 #include <tinyfiledialogs.h>
 #include "easing.h"
 #include <nlohmann/json.hpp>

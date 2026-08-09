@@ -4,6 +4,8 @@ project(MusicVisLib LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Override minimum policy version")
+set(SFML_STATIC_LIBRARIES OFF)
+set(IMGUI_SFML_FIND_SFML OFF CACHE BOOL "" FORCE)
 # SFML 3
 include(FetchContent)
 FetchContent_Declare(
@@ -31,7 +33,19 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/nlohmann/json.git
         GIT_TAG        55f93686c01528224f448c19128836e7df245f72
 )
-FetchContent_MakeAvailable(boost SFML midifile tfd nlohmann_json)
+FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG        f5befd2d29e66809cd1110a152e375a7f1981f06
+)
+FetchContent_Declare(
+        imgui-sfml
+        GIT_REPOSITORY https://github.com/SFML/imgui-sfml.git
+        GIT_TAG        5e8f8fb857c8f3cff1096bf3e4402c64e3bcf6af
+)
+FetchContent_MakeAvailable(boost SFML midifile tfd nlohmann_json imgui)
+set(IMGUI_DIR ${imgui_SOURCE_DIR})
+FetchContent_MakeAvailable(imgui-sfml)
 
 find_package(OpenGL REQUIRED)
 
@@ -59,14 +73,6 @@ add_executable(MusicVisLib
     src/easing.h
 )
 
-target_sources(MusicVisLib PRIVATE
-    imgui/imgui.cpp
-    imgui/imgui_draw.cpp
-    imgui/imgui_tables.cpp
-    imgui/imgui_widgets.cpp
-    imgui/imgui_demo.cpp
-    imgui/imgui-SFML.cpp
-)
 
 add_library(tfd STATIC
         ${tfd_SOURCE_DIR}/tinyfiledialogs.c
@@ -75,7 +81,6 @@ add_library(tfd STATIC
 target_include_directories(tfd PUBLIC
         ${tfd_SOURCE_DIR}
 )
-
 target_include_directories(midifile PUBLIC
         ${midifile_SOURCE_DIR}/include
 )
@@ -97,6 +102,8 @@ target_link_libraries(MusicVisLib PRIVATE
         midifile
         tfd
         nlohmann_json::nlohmann_json
+        ImGui-SFML::ImGui-SFML
+
 )
 
 if (APPLE)

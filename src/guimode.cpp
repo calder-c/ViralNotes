@@ -1,9 +1,7 @@
 #include "guimode.h"
 
 #include <fstream>
-
-#include "../imgui/imgui_internal.h"
-
+#include <imgui_internal.h>
 void saveSettings(const std::string& filename, const VisualizerSettings &settings) {
     std::ofstream o(filename);
     json j_out = settings;
@@ -38,7 +36,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         {
             window.close();
         }
-
+        static bool advancedSettings = false;
         ImGui::SFML::Update(window, deltaClock.restart());
         ImGui::SetNextWindowSize(ImVec2{static_cast<float>(guiDimensions.x), static_cast<float>(guiDimensions.y)});
         ImGui::SetNextWindowPos(ImVec2{0, 0});
@@ -46,6 +44,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         ImGui::Text("Window Settings");
         ImGui::Text("FX Settings");
         ImGui::Checkbox("Recording Only", &settings.doSave);
+        ImGui::Checkbox("Advanced Settings", &advancedSettings);
         ImGui::SliderInt("Center Circle Point Count", &settings.circlePointCount, 0.0f, 1200.0f);
         ImGui::SliderFloat("Center Circle Outline Thickness", &settings.outlineThickness, 1.0f, 100.0f);
         ImGui::SliderFloat("Center Circle Radius", &settings.circleRadius, 1.0f, 1000.0f);
