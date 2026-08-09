@@ -57,7 +57,6 @@ add_executable(MusicVisLib
     src/guimode.cpp
     src/guimode.h
     src/easing.h
-        src/recorder.h
 )
 
 target_sources(MusicVisLib PRIVATE

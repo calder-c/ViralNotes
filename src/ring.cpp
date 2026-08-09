@@ -10,6 +10,10 @@
 #include "midi.h"
 #include "disc.h"
 #include "guimode.h"
+#include <SFML/OpenGL.hpp>   // at the top with the other includes
+#include <boost/process.hpp>
+#include <boost/asio.hpp>
+using namespace boost;
 sf::Color getRainbowColor(float hue) {
     // Wrap hue around if it exceeds 360
     hue = std::fmod(hue, 360.0f);
@@ -106,7 +110,8 @@ int main(int argc, char** argv) {
         doImguiLoop(sf::Vector2u{1200, 800}, settings);
     }
     sf::ContextSettings windowSettings;
-    windowSettings.antiAliasingLevel = 0;
+    windowSettings.antiAliasingLevel = 8;
+
     sf::RenderWindow window{sf::VideoMode({settings.SCREEN_X, settings.SCREEN_Y}), "Ring Visualiser", sf::Style::Default, sf::State::Windowed, windowSettings};
     window.setFramerateLimit(0);
     window.setVerticalSyncEnabled(false);
@@ -182,18 +187,44 @@ int main(int argc, char** argv) {
 
     std::atomic<int> activeThreads = 0;
     float lastTimestamp = 0.0f;
-    if (settings.doSave) {
+    sf::Vector2u size = window.getSize();
+    auto ffmpegPath = process::environment::find_executable("ffmpeg");
+    std::initializer_list<std::string> ffmpegInitList = {
+        "-framerate", "60",
+        "-f", "rawvideo",
+        "-pix_fmt", "rgba",
+        "-s", std::to_string(settings.SCREEN_X) + "x" + std::to_string(settings.SCREEN_Y),
+        "-i", "pipe:0",
+        //---------------------------------------
+        "-itsoffset", std::to_string(settings.playOffset),
+        "-i", settings.musicFilename,
+        //---------------------------------------
+        "-c:v", "libx264",
+        "-preset", "veryslow",
+        "-crf", "18",
+        "-vf", "vflip, scale=trunc(iw/2)*2:trunc(ih/2)*2",
+        "-pix_fmt", "yuv420p",
+        "-c:a", "aac",
+        "-shortest",
+        "-y",
+        settings.exportPath
 
-        //system(("cd ./" + dirName + " && ""ffmpeg -framerate 60 -f image2 -pattern_type sequence -start_number 0 -i '%d.bmp' -itsoffset " + std::to_string(settings.playOffset) + " -i " + settings.musicFilename + " -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -pix_fmt yuv420p " + settings.exportPath).c_str());
+    };
+    std::optional<asio::writable_pipe> wp;
+    std::optional<process::process> ffmpegProc;
+    asio::io_context ctx{};
+    std::vector<std::uint8_t> pixels(std::size_t(size.x) * size.y * 4);
+    if (settings.doSave) {
+        wp = asio::writable_pipe{ctx};
+        ffmpegProc = process::process(ctx, ffmpegPath, ffmpegInitList, process::process_stdio{wp.value(), nullptr, {}});
     }
-    sf::RenderTexture exportTarget({settings.SCREEN_X, settings.SCREEN_Y}, windowSettings);
-    sf::Vector2u exportSize = exportTarget.getSize();
-    window.setFramerateLimit(0);
-    window.setVerticalSyncEnabled(false);
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
     while (window.isOpen()){
         frameCount++;
         window.clear();
-        exportTarget.clear();
+        window.setActive(true);
+
         if (settings.doSave) {
             elapsedTime += fixedDt;
         } else {
@@ -235,11 +266,8 @@ int main(int argc, char** argv) {
         }
 
         circle.setOutlineThickness(currentOutlineThickness);
-        if (settings.doSave) {
-            exportTarget.draw(circle);
-        } else {
-            window.draw(circle);
-        }
+
+        window.draw(circle);
         if (currentOutlineThickness <= settings.outlineThickness) {
             currentOutlineThickness = settings.outlineThickness;
 
@@ -271,11 +299,9 @@ int main(int argc, char** argv) {
 
                 text.first->setFillColor(flashedColor);
             }
-            if (settings.doSave) {
-                exportTarget.draw(*text.first);
-            } else {
-                window.draw(*text.first);
-            }
+
+            window.draw(*text.first);
+
 
         }
         int discsRendering = 0;
@@ -283,11 +309,9 @@ int main(int argc, char** argv) {
             int result = disc->update(dt);
             if (disc->doRender == true) {
                 discsRendering++;
-                if (settings.doSave) {
-                    exportTarget.draw(disc->shape);
-                } else {
-                    disc->render(window);
-                }
+
+                disc->render(window);
+
 
                 if (result == 1) {
                     disc->setNewDestination(sf::Vector2f(circleCenterX, circleCenterY), settings.preDelay);
@@ -316,33 +340,12 @@ int main(int argc, char** argv) {
             return false;
         });
         if (settings.doSave) {
-            exportTarget.display();
-            sf::Image screenshot = exportTarget.getTexture().copyToImage();
-            const std::uint8_t *pixelsPtr = screenshot.getPixelsPtr();
-            size_t totalBytes = exportSize.x*exportSize.y*4;
-            asio::write(wp.value(), asio::buffer(screenshot.getPixelsPtr(), totalBytes));
-        }
-        // if (settings.doSave) {
-        //     sf::Clock c;
-        //     exportTarget.display();
-        //     float resolve = c.restart().asMicroseconds() / 1000.0f;
-        //
-        //     sf::Image screenshot = exportTarget.getTexture().copyToImage();
-        //     float readback = c.restart().asMicroseconds() / 1000.0f;
-        //
-        //     std::size_t totalBytes = std::size_t(exportSize.x) * exportSize.y * 4;
-        //     asio::write(*wp, asio::buffer(screenshot.getPixelsPtr(), totalBytes));
-        //     float pipeWrite = c.restart().asMicroseconds() / 1000.0f;
-        //
-        //     if (frameCount % 60 == 0) {
-        //         std::cout << "resolve " << resolve
-        //                   << "  readback " << readback
-        //                   << "  write " << pipeWrite
-        //                   << "  discs " << discsRendering << "\n";
-        //     }
-        // }
-        if (!settings.doSave) {
-            window.draw(sf::Sprite(exportTarget.getTexture()));
+            sf::Clock c;
+            glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+            float readback = c.restart().asMicroseconds() / 1000.0f;
+            if (frameCount % 60 == 0)
+                std::cout << "readback " << readback << "\n";
+            asio::write(*wp, asio::buffer(pixels.data(), std::size_t(size.x) * size.y * 4));
         }
         window.display();
 
@@ -350,8 +353,9 @@ int main(int argc, char** argv) {
             window.close();
         }
     }
-    if (settings.doSave) {
-        std::cout << "ffmpeg exited with " << ffmpegProc.value().exit_code() << "\n";
+    if (wp && ffmpegProc) {
+        wp->close();  // EOF -> ffmpeg flushes and finalizes
+        ffmpegProc->wait();
     }
 
 }
