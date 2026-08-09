@@ -11,9 +11,8 @@
 #include "disc.h"
 #include "guimode.h"
 #include <SFML/OpenGL.hpp>   // at the top with the other includes
-#include <boost/process.hpp>
-#include <boost/asio.hpp>
-using namespace boost;
+#include <reproc++/reproc.hpp>
+using namespace reproc;
 sf::Color getRainbowColor(float hue) {
     // Wrap hue around if it exceeds 360
     hue = std::fmod(hue, 360.0f);
@@ -188,8 +187,9 @@ int main(int argc, char** argv) {
     std::atomic<int> activeThreads = 0;
     float lastTimestamp = 0.0f;
     sf::Vector2u size = window.getSize();
-    auto ffmpegPath = process::environment::find_executable("ffmpeg");
-    std::initializer_list<std::string> ffmpegInitList = {
+    //auto ffmpegPath = process::environment::find_executable("ffmpeg");
+    std::vector<std::string> ffmpegInitList = {
+        "ffmpeg",
         "-framerate", "60",
         "-f", "rawvideo",
         "-pix_fmt", "rgba",
@@ -200,7 +200,7 @@ int main(int argc, char** argv) {
         "-i", settings.musicFilename,
         //---------------------------------------
         "-c:v", "libx264",
-        "-preset", "veryslow",
+        "-preset", "medium",
         "-crf", "18",
         "-vf", "vflip, scale=trunc(iw/2)*2:trunc(ih/2)*2",
         "-pix_fmt", "yuv420p",
@@ -210,13 +210,12 @@ int main(int argc, char** argv) {
         settings.exportPath
 
     };
-    std::optional<asio::writable_pipe> wp;
-    std::optional<process::process> ffmpegProc;
-    asio::io_context ctx{};
-    std::vector<std::uint8_t> pixels(std::size_t(size.x) * size.y * 4);
+    //std::optional<asio::writable_pipe> wp;
+    std::unique_ptr<process> ffmpegProc = nullptr;
+    std::vector<u_int8_t> pixels(std::size_t(size.x) * size.y * 4);
     if (settings.doSave) {
-        wp = asio::writable_pipe{ctx};
-        ffmpegProc = process::process(ctx, ffmpegPath, ffmpegInitList, process::process_stdio{wp.value(), nullptr, {}});
+        ffmpegProc = std::make_unique<process>();
+        ffmpegProc->start(ffmpegInitList);
     }
 
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -345,7 +344,7 @@ int main(int argc, char** argv) {
             float readback = c.restart().asMicroseconds() / 1000.0f;
             if (frameCount % 60 == 0)
                 std::cout << "readback " << readback << "\n";
-            asio::write(*wp, asio::buffer(pixels.data(), std::size_t(size.x) * size.y * 4));
+            ffmpegProc->write(pixels.data(), std::size_t(size.x) * size.y * 4);
         }
         window.display();
 
@@ -353,9 +352,10 @@ int main(int argc, char** argv) {
             window.close();
         }
     }
-    if (wp && ffmpegProc) {
-        wp->close();  // EOF -> ffmpeg flushes and finalizes
-        ffmpegProc->wait();
+    if (ffmpegProc != nullptr) {
+        ffmpegProc->close(stream::in);
+        ffmpegProc->wait(infinite);
+        ffmpegProc.release();
     }
 
 }
