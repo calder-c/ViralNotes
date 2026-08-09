@@ -9,9 +9,9 @@ set(IMGUI_SFML_FIND_SFML OFF CACHE BOOL "" FORCE)
 # SFML 3
 include(FetchContent)
 FetchContent_Declare(
-        boost
-        GIT_REPOSITORY https://github.com/boostorg/boost.git
-        GIT_TAG        25a8895fcdd04faa2afff3c124c41b54713be88d
+        reproc++
+        GIT_REPOSITORY https://github.com/daandemeyer/reproc.git
+        GIT_TAG        06034a7fca1ec46eddb4997f7764db89380c5216
 )
 FetchContent_Declare(
         SFML
@@ -43,7 +43,8 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/SFML/imgui-sfml.git
         GIT_TAG        5e8f8fb857c8f3cff1096bf3e4402c64e3bcf6af
 )
-FetchContent_MakeAvailable(boost SFML midifile tfd nlohmann_json imgui)
+set(REPROC++ ON CACHE BOOL "Build reproc++ API wrapper" FORCE)
+FetchContent_MakeAvailable(reproc++ SFML midifile tfd nlohmann_json imgui)
 set(IMGUI_DIR ${imgui_SOURCE_DIR})
 FetchContent_MakeAvailable(imgui-sfml)
 
@@ -84,7 +85,9 @@ target_include_directories(tfd PUBLIC
 target_include_directories(midifile PUBLIC
         ${midifile_SOURCE_DIR}/include
 )
-
+#target_include_directories(reproc++ PUBLIC
+#        ${reproc++_SOURCE_DIR}/include/reproc++
+#)
 
 if(TARGET OpenGL::OpenGL)
     set(OPENGL_TARGET OpenGL::OpenGL)
@@ -98,7 +101,7 @@ target_link_libraries(MusicVisLib PRIVATE
         SFML::Audio
         SFML::Window
         SFML::System
-        Boost::process
+        reproc++
         midifile
         tfd
         nlohmann_json::nlohmann_json
