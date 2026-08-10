@@ -33,10 +33,10 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
             }
 
         }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
-        {
-            window.close();
-        }
+        // if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter))
+        // {
+        //     window.close();
+        // }
         static bool advancedSettings = false;
         ImGui::SFML::Update(window, deltaClock.restart());
         ImGui::SetNextWindowSize(ImVec2{static_cast<float>(guiDimensions.x), static_cast<float>(guiDimensions.y)});
