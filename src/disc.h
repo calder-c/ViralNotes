@@ -54,7 +54,7 @@ public:
             timesReached +=1;
         } else {
 
-            if (timesReached == 1) {
+            if (timesReached < 1) {
                 pos = startPos + (destination - startPos) * selectEasing(t, funcIn);
             } else {
                 pos = startPos + (destination - startPos) * selectEasing(t, funcOut);
