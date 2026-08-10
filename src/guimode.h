@@ -28,7 +28,6 @@ struct VisualizerSettings {
     float hueOffset = 300.0f;
     float BPM = 120;
     unsigned int SCREEN_X = 800, SCREEN_Y = 600;
-    int maxThreads = 200;
     std::string exportPath = "./output.mp4";
     bool doSave = false;
     std::string funcIn = "linear";
@@ -51,7 +50,6 @@ inline void to_json(json& j,  const VisualizerSettings& s) {
         {"BPM", s.BPM},
         {"screenX", s.SCREEN_X},
         {"screenY", s.SCREEN_Y},
-        {"maxThreads", s.maxThreads},
         {"exportPath", s.exportPath},
         {"doSave", s.doSave},
         {"funcIn", s.funcIn},
@@ -75,7 +73,6 @@ inline void from_json(const json& j, VisualizerSettings& s)
     s.BPM                = j.value("BPM", s.BPM);
     s.SCREEN_X           = j.value("screenX", s.SCREEN_X);
     s.SCREEN_Y           = j.value("screenY", s.SCREEN_Y);
-    s.maxThreads         = j.value("maxThreads", s.maxThreads);
     s.exportPath         = j.value("exportPath", s.exportPath);
     s.doSave             = j.value("doSave", s.doSave);
     s.funcIn             = j.value("funcIn", s.funcIn);

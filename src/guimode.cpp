@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 void saveSettings(const std::string& filename, const VisualizerSettings &settings) {
     std::ofstream o(filename);
     json j_out = settings;
@@ -44,6 +45,14 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         ImGui::Text("Window Settings");
         ImGui::Text("FX Settings");
         ImGui::Checkbox("Recording Only", &settings.doSave);
+        if (settings.doSave) {
+            const char * videoFormats[1] = {"*.mp4"};
+            if (ImGui::Button("Choose export path (MP4)")) {
+                if (const char *fileChosen = tinyfd_saveFileDialog("Choose export mp4 path", settings.exportPath.c_str(), 1, videoFormats,"MP4 Files"); fileChosen != nullptr) {
+                    settings.exportPath = fileChosen;
+                }
+            }
+        }
         ImGui::Checkbox("Advanced Settings", &advancedSettings);
         ImGui::SliderInt("Center Circle Point Count", &settings.circlePointCount, 0.0f, 1200.0f);
         ImGui::SliderFloat("Center Circle Outline Thickness", &settings.outlineThickness, 1.0f, 100.0f);
@@ -54,15 +63,6 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         ImGui::ColorConvertHSVtoRGB(settings.hueOffset/365.0f, 1, 1, rgb_color.x, rgb_color.y, rgb_color.z);
         rgb_color.w = 1.0;
         ImGui::ColorButton("##ColorDisplay", rgb_color, ImGuiColorEditFlags_None, ImVec2(50, 50));
-        if (settings.doSave) {
-            ImGui::SliderInt("[RECORDING] Max Recording Threads", &settings.maxThreads, 1.0f, 300.0f);
-            const char * videoFormats[1] = {"*.mp4"};
-            if (ImGui::Button("Choose export path (MP4)")) {
-                if (const char *fileChosen = tinyfd_saveFileDialog("Choose export mp4 path", settings.exportPath.c_str(), 1, videoFormats,"MP4 Files"); fileChosen != nullptr) {
-                    settings.exportPath = fileChosen;
-                }
-            }
-        }
         ImGui::Text("Note Settings");
         ImGui::InputFloat("BPM", &settings.BPM, 1.f, 50.0f);
         ImGui::SliderFloat("Note Travel Time", &settings.preDelay, 0.f, 20.0f);
@@ -101,6 +101,13 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
                 VisualizerSettings newSettings = loadSettings(fileChosen);
                 settings = newSettings;
             }
+        }
+        if (advancedSettings) {
+            ImGui::Text("MIDI File Absolute Path");
+            ImGui::InputText("##MIDI File Absolute Path", &settings.midiFilename, 0, nullptr, &settings.midiFilename);
+            ImGui::Text("Music File Absolute Path");
+            ImGui::InputText("##Music File Absolute Path", &settings.musicFilename, 0, nullptr, &settings.musicFilename);
+
         }
         if (ImGui::Button("Start Playback [ENTER]")) {
             window.close();

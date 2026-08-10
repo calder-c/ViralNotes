@@ -7,11 +7,13 @@ A C++ project aiming to recreate those viral note videos online that gain millio
 The initial idea was based on [this reel](https://www.instagram.com/reels/DbjUjOwt7d4/) that I found on Instagram from @bitdocmusic. I noticed that it was a fairly simple concept: little spheres flying out and seeming to trigger notes upon hitting the edge of the circle that contained them. I wondered if I could recreate this in C++ open source for anyone to generate their own videos and potentially go viral!
 
 ## Dependencies
- - [cmake version 3.16](https://cmake.org/download/)
+ - [cmake version 3.5+](https://cmake.org/download/)
  - C++ standard 20+
- - [SFML 3.x](https://www.sfml-dev.org/download/sfml/3.0.0/)
+ - ffmpeg added to PATH (*optional if not recording*)
 
-Already packaged in this repo
+
+Automatically build through CMakeLists:
+- SFML 3.x
 - [midifile](https://github.com/craigsapp/midifile)
 - [nlohmann/json](https://github.com/nlohmann/json)
 - [tinyfiledialogs](https://sourceforge.net/projects/tinyfiledialogs/)
@@ -22,29 +24,20 @@ Clone the repo
 
 `git clone https://github.com/calder-c/ViralNotes.git`
 
-*all of packages listed are already packaged with the repo except an SFML 3.x install, 
-cmake requires this to build*
 
 ### Building from source
 
-`cmake ../ && make`
+`cmake -S ./ -B build && cd ./build/ && make`
 
-**Mac / Linux environments**
+or without make:
 
-`cd cmake-build-debug`
+`cmake -S ./ -B build && cmake --build build`
 
-`./MusicVisLib -m YOURMIDIFILE.mid --sound ../SONG.mp3 --BPM xxx`
-
-
-**Windows environments (untested)**
-
-`cd cmake-build-debug`
-
-`./MusicVisLib.exe -m YOURMIDIFILE.mid --sound ../SONG.mp3 --BPM xxx`
 ___
-(or simply supply the `--gui` flag to open an ImGui window to set and save all parameters)
+simply supply the `--gui` flag to open an ImGui window to set and save all parameters
+
+
 ___
-IMPORTANT: the filenames require absolute path or `./` local path
 ## Other Notes
 
 Make sure that the midi files and the song files are perfectly in sync for the bpm.

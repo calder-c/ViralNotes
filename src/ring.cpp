@@ -87,9 +87,6 @@ int main(int argc, char** argv) {
         else if (arg == "--export" || arg == "--save") {
             settings.doSave = true;
         }
-        else if (arg == "--threads") {
-            settings.maxThreads = std::stoi(argv[++i]);
-        }
         else if (arg == "--gui") {
             guiMode = true;
         }
@@ -184,7 +181,6 @@ int main(int argc, char** argv) {
     //     std::filesystem::create_directory("./" + dirName);
     // }
 
-    std::atomic<int> activeThreads = 0;
     float lastTimestamp = 0.0f;
     sf::Vector2u size = window.getSize();
     //auto ffmpegPath = process::environment::find_executable("ffmpeg");
@@ -212,7 +208,7 @@ int main(int argc, char** argv) {
     };
     //std::optional<asio::writable_pipe> wp;
     std::unique_ptr<process> ffmpegProc = nullptr;
-    std::vector<u_int8_t> pixels(std::size_t(size.x) * size.y * 4);
+    std::vector<uint8_t> pixels(std::size_t(size.x) * size.y * 4);
     if (settings.doSave) {
         ffmpegProc = std::make_unique<process>();
         ffmpegProc->start(ffmpegInitList);
