@@ -6,6 +6,9 @@ A C++ project aiming to recreate those viral note videos online that gain millio
 ## Introduction
 The initial idea was based on [this reel](https://www.instagram.com/reels/DbjUjOwt7d4/) that I found on Instagram from @bitdocmusic. I noticed that it was a fairly simple concept: little spheres flying out and seeming to trigger notes upon hitting the edge of the circle that contained them. I wondered if I could recreate this in C++ open source for anyone to generate their own videos and potentially go viral!
 
+## Demo
+https://github.com/user-attachments/assets/b2476afc-0c07-4d11-9d9b-4fccbbd65069
+
 ## Dependencies
  - [cmake version 3.5+](https://cmake.org/download/)
  - C++ standard 20+
