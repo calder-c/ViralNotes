@@ -1,5 +1,5 @@
 #include "guimode.h"
-
+#include "presets.h"
 #include <fstream>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -45,6 +45,8 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         ImGui::Text("Window Settings");
         ImGui::Text("FX Settings");
         ImGui::Checkbox("Recording Only", &settings.doSave);
+        static int currentVideoPreset = 2;
+        settings.selectedVideoPreset = currentVideoPreset;
         if (settings.doSave) {
             const char * videoFormats[1] = {"*.mp4"};
             if (ImGui::Button("Choose export path (MP4)")) {
@@ -52,6 +54,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
                     settings.exportPath = fileChosen;
                 }
             }
+            ImGui::ListBox("Quality Preset", &currentVideoPreset, allowedPresets, IM_ARRAYSIZE(allowedPresets), 1);
         }
         ImGui::Checkbox("Advanced Settings", &advancedSettings);
         ImGui::SliderInt("Center Circle Point Count", &settings.circlePointCount, 0.0f, 1200.0f);

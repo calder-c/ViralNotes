@@ -10,6 +10,7 @@
 #include "midi.h"
 #include "disc.h"
 #include "guimode.h"
+#include "presets.h"
 #include "fonts.h"
 #include <SFML/OpenGL.hpp>   // at the top with the other includes
 #include <reproc++/reproc.hpp>
@@ -186,6 +187,7 @@ int main(int argc, char** argv) {
     float lastTimestamp = 0.0f;
     sf::Vector2u size = window.getSize();
     //auto ffmpegPath = process::environment::find_executable("ffmpeg");
+    auto qualityPreset = ffmpegPreset(allowedPresets[settings.selectedVideoPreset]);
     std::vector<std::string> ffmpegInitList = {
         "ffmpeg",
         "-framerate", "60",
@@ -198,8 +200,8 @@ int main(int argc, char** argv) {
         "-i", settings.musicFilename,
         //---------------------------------------
         "-c:v", "libx264",
-        "-preset", "medium",
-        "-crf", "18",
+        "-preset", qualityPreset.second,
+        "-crf", qualityPreset.first,
         "-vf", "vflip, scale=trunc(iw/2)*2:trunc(ih/2)*2",
         "-pix_fmt", "yuv420p",
         "-c:a", "aac",

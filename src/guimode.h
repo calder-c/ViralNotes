@@ -34,6 +34,7 @@ struct VisualizerSettings {
     std::string funcOut = "linear";
     int currentItemIn = 0;
     int currentItemOut = 0;
+    int selectedVideoPreset = 2;
 };
 
 inline void to_json(json& j,  const VisualizerSettings& s) {
