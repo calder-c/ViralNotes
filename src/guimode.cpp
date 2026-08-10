@@ -38,6 +38,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
         //     window.close();
         // }
         static bool advancedSettings = false;
+        static bool screenDimensionsInitialized = false;
         ImGui::SFML::Update(window, deltaClock.restart());
         ImGui::SetNextWindowSize(ImVec2{static_cast<float>(guiDimensions.x), static_cast<float>(guiDimensions.y)});
         ImGui::SetNextWindowPos(ImVec2{0, 0});
@@ -103,6 +104,7 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
             if (const char *fileChosen = tinyfd_openFileDialog("Choose load path", "settings.json", 0, jsonFormats,"JSON Files", 0); fileChosen != nullptr) {
                 VisualizerSettings newSettings = loadSettings(fileChosen);
                 settings = newSettings;
+                screenDimensionsInitialized = false;
             }
         }
         if (advancedSettings) {
@@ -110,6 +112,18 @@ void doImguiLoop(sf::Vector2u guiDimensions, VisualizerSettings & settings) {
             ImGui::InputText("##MIDI File Absolute Path", &settings.midiFilename, 0, nullptr, &settings.midiFilename);
             ImGui::Text("Music File Absolute Path");
             ImGui::InputText("##Music File Absolute Path", &settings.musicFilename, 0, nullptr, &settings.musicFilename);
+            static int screenDimensions[2];
+            if (!screenDimensionsInitialized) {
+                screenDimensions[0] = settings.SCREEN_X;
+                screenDimensions[1] = settings.SCREEN_Y;
+                screenDimensionsInitialized = true;
+            } else {
+                screenDimensions[0] = screenDimensions[0]/2 * 2;
+                screenDimensions[1] = screenDimensions[1]/2 * 2;
+                settings.SCREEN_X = screenDimensions[0];
+                settings.SCREEN_Y = screenDimensions[1];
+            }
+            ImGui::InputInt2("Screen Dimensions", screenDimensions, 0);
 
         }
         if (ImGui::Button("Start Playback [ENTER]")) {
