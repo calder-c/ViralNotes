@@ -72,6 +72,7 @@ add_executable(MusicVisLib
     src/guimode.cpp
     src/guimode.h
     src/easing.h
+        src/fonts.h
 )
 
 
